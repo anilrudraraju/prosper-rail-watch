@@ -1,0 +1,9 @@
+selenium
+webdriver-manager
+Pillow
+numpy
+opencv-python
+flask
+flask-cors
+pytz
+ultralytics

@@ -1,0 +1,26 @@
+# Model weights (too large for GitHub)
+*.pt
+
+# Live database
+*.db
+
+# Captured images
+screenshots/
+training_capture/
+
+# Old manual backups (replaced by git history)
+*.bak.*
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# macOS
+.DS_Store
+
+# Secrets (when Twilio is added — never commit these)
+secrets.py
+config.py
+.env.local
