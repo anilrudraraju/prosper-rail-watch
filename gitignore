@@ -24,3 +24,18 @@ __pycache__/
 secrets.py
 config.py
 .env.local
+
+# Server utility scripts
+test_chrome.py
+test_py
+backfill_train_events.py
+cleanup_bad_frames.py
+venv/
+
+# Extra backups
+Backup/
+*.backup_*
+deployment_history.md
+
+# Chrome installer
+*.deb
