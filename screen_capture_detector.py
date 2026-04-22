@@ -1,7 +1,7 @@
 """
 Prosper Rail Watch - Screen Capture Detection
-VERSION: 4.6 - Performance + Reliability Fixes
-Last Updated: April 21, 2026
+VERSION: 4.7 - Extended Peak Hours + Post-Train Capture
+Last Updated: April 22, 2026
 Features: SQLite Database, Screenshot Saving, YOLO AI Detection, Smart Scheduling,
           Blackout Hours, Burst Mode (60s), Possible Train Folder, 5-min Off-Peak,
           Train-Only Bounding Boxes, Staggered Camera Starts,
@@ -333,8 +333,7 @@ CAMERA_URLS = {
 MONITORING_SCHEDULE = {
     'enabled': True,
     'time_windows': [
-        {'start': '07:00', 'end': '09:00'},
-        {'start': '15:00', 'end': '17:00'}
+        {'start': '07:00', 'end': '18:00'},
     ],
     'blackout': {
         'enabled': True,
@@ -347,7 +346,7 @@ MONITORING_SCHEDULE = {
 SCREENSHOT_CONFIG = {
     'enabled': True,
     'save_path': '/var/www/prosper-rail-watch/screenshots',
-    'save_all_frames': True,
+    'save_all_frames': False,
     'draw_boxes': True,
     'organize_by_result': True,
     'keep_days': 45
@@ -360,6 +359,8 @@ BURST_CONFIG = {
     'burst_interval_seconds': 60,
     'burst_duration_seconds': 600,
 }
+
+POST_TRAIN_SAVE_MINUTES = 20
 
 DB_CONFIG = {
     'enabled': True,
@@ -581,6 +582,7 @@ class ScreenCaptureDetector:
         train_event_active = False
         train_event_start = None
         train_event_max_conf = 0
+        post_train_capture_until = None
 
         while self.is_running:
             try:
@@ -666,7 +668,12 @@ class ScreenCaptureDetector:
                     max_train_conf = max(train_confidences) if train_confidences else 0
                     screenshot_path = None
                     if SCREENSHOT_CONFIG['enabled']:
-                        screenshot_path = self.save_screenshot_with_detections(frame, detections_info, train_detected)
+                        in_post_train_window = post_train_capture_until is not None and time.time() < post_train_capture_until
+                        if train_detected or max_train_conf >= BURST_CONFIG['possible_train_confidence'] or in_post_train_window:
+                            if not train_detected and max_train_conf < BURST_CONFIG['possible_train_confidence'] and in_post_train_window:
+                                remaining = (post_train_capture_until - time.time()) / 60
+                                print(f"📸 [{self.camera_info['name']}] Post-train no_train saved ({remaining:.1f} mins remaining)")
+                            screenshot_path = self.save_screenshot_with_detections(frame, detections_info, train_detected)
                     confidence = max_train_conf if max_train_conf > 0 else None
                     save_detection_to_db(
                         camera_id=self.camera_id, camera_name=self.camera_info['name'],
@@ -708,6 +715,8 @@ class ScreenCaptureDetector:
 
                     elif max_train_conf >= BURST_CONFIG['possible_train_confidence']:
                         print(f"🔶 [{self.camera_info['name']}] Possible train ({max_train_conf:.1f}%) - saved to possible_trains/")
+                        post_train_capture_until = time.time() + POST_TRAIN_SAVE_MINUTES * 60
+                        print(f"📸 [{self.camera_info['name']}] Post-train capture window started ({POST_TRAIN_SAVE_MINUTES} mins)")
                         if train_event_active:
                             save_train_event(self.camera_id, self.camera_info['name'],
                                              train_event_start, datetime.now(), train_event_max_conf)
@@ -727,6 +736,8 @@ class ScreenCaptureDetector:
                             save_train_event(self.camera_id, self.camera_info['name'],
                                              train_event_start, datetime.now(), train_event_max_conf)
                             train_event_active = False; train_event_start = None; train_event_max_conf = 0
+                            post_train_capture_until = time.time() + POST_TRAIN_SAVE_MINUTES * 60
+                            print(f"📸 [{self.camera_info['name']}] Post-train capture window started ({POST_TRAIN_SAVE_MINUTES} mins)")
 
                 print(f"⏰ [{self.camera_info['name']}] {mode_label}Waiting {interval}s until next check...")
                 time.sleep(interval)
@@ -771,7 +782,7 @@ def stop_monitoring():
 def get_status():
     return jsonify({
         'status': 'running' if system_running else 'stopped',
-        'version': '4.6',
+        'version': '4.7',
         'cameras': [
             {'camera_id': cam_id, 'name': info['name'], 'location': info['location'], 'is_active': system_running}
             for cam_id, info in CAMERA_URLS.items()
@@ -998,7 +1009,7 @@ def stop_training_capture():
 
 if __name__ == '__main__':
     print("=" * 70)
-    print("PROSPER RAIL WATCH - Screen Capture Detection v4.6")
+    print("PROSPER RAIL WATCH - Screen Capture Detection v4.7")
     print("=" * 70)
     print()
     print("🗄️  Initializing database...")
