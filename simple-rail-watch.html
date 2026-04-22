@@ -449,7 +449,7 @@
                 // Only stack vertically if two events are at the exact same minute
                 var offset = (minuteIdx[key] - (total - 1) / 2) * 0.13;
                 minuteIdx[key]++;
-                return { x: exactX, y: 0.5 + offset, r: Math.max(10, Math.min(28, 8 + (e.dur / 60) * 2)), dur: e.dur };
+                return { x: exactX, y: 0.5 + offset, r: Math.max(8, Math.min(28, Math.sqrt(e.dur) * 0.65)), dur: e.dur };
             });
 
             bubbleChartInstance = new Chart(document.getElementById('bubbleChart'), {
