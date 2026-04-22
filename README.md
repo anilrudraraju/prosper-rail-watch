@@ -97,11 +97,12 @@ The city cameras support RTSP natively. I'm working on getting read-only stream 
 ## Scheduling
 
 ```
-Peak hours (7–9 AM, 3–5 PM CDT):   20s sleep between captures
+Active hours (7 AM – 6 PM CDT):     20s sleep between captures (~53s full cycle)
 Off-peak:                            5 minute sleep
 Blackout (7:30 PM – 7:00 AM):       Both cameras sleep
 Burst mode (train or possible):      60s interval for 10 minutes on that camera
-Training capture mode:               First Street captures as fast as possible (~53s cycle)
+Post-train capture window:           20 mins of no_train images saved after train event ends
+Training capture mode:               Target camera captures as fast as possible (~53s cycle)
 ```
 
 ---
@@ -151,7 +152,7 @@ sleep 35 && cat /var/log/prosper-autostart.log
 
 - [ ] Twilio SMS alerts when train detected
 - [ ] RTSP stream access (direct from city cameras — drops latency to ~2s)
-- [ ] Google Analytics for community usage data
+- [x] Google Analytics for community usage data
 - [ ] Historical data API for city website embed
 - [ ] Better dawn/dusk detection with targeted retraining
 
