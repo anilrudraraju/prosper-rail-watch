@@ -460,7 +460,7 @@
                                 label: function(ctx) {
                                     var h = Math.floor(ctx.raw.x);
                                     var mins = Math.round((ctx.raw.x - h) * 60);
-                                    var dur = Math.round(ctx.raw.r / 1.8);
+                                    var dur = Math.max(1, Math.round((ctx.raw.r - 8) / 2));
                                     var ampm = h < 12 ? 'AM' : 'PM';
                                     var h12 = h % 12 || 12;
                                     return ' ' + h12 + ':' + (mins < 10 ? '0' : '') + mins + ' ' + ampm + ' — ~' + dur + ' min blockage';
