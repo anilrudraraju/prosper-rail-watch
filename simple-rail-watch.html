@@ -443,7 +443,7 @@
                 // Only stack vertically if two events are at the exact same minute
                 var offset = (minuteIdx[key] - (total - 1) / 2) * 0.13;
                 minuteIdx[key]++;
-                return { x: exactX, y: 0.5 + offset, r: Math.max(10, Math.min(28, 8 + (e.dur / 60) * 2)) };
+                return { x: exactX, y: 0.5 + offset, r: Math.max(10, Math.min(28, 8 + (e.dur / 60) * 2)), dur: e.dur };
             });
 
             bubbleChartInstance = new Chart(document.getElementById('bubbleChart'), {
@@ -460,10 +460,10 @@
                                 label: function(ctx) {
                                     var h = Math.floor(ctx.raw.x);
                                     var mins = Math.round((ctx.raw.x - h) * 60);
-                                    var dur = Math.max(1, Math.round((ctx.raw.r - 8) / 2));
+                                    var dur = (ctx.raw.dur / 60).toFixed(1);
                                     var ampm = h < 12 ? 'AM' : 'PM';
                                     var h12 = h % 12 || 12;
-                                    return ' ' + h12 + ':' + (mins < 10 ? '0' : '') + mins + ' ' + ampm + ' — ~' + dur + ' min blockage';
+                                    return ' ' + h12 + ':' + (mins < 10 ? '0' : '') + mins + ' ' + ampm + ' — ' + dur + ' min blockage';
                                 }
                             }
                         },
