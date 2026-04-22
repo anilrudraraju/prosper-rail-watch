@@ -3,7 +3,7 @@ Prosper Rail Watch - Screen Capture Detection
 VERSION: 4.8 - Single 7AM-7PM Monitoring Window
 Last Updated: April 22, 2026
 Features: SQLite Database, Screenshot Saving, YOLO AI Detection, Smart Scheduling,
-          Blackout Hours, Burst Mode (60s), Possible Train Folder, 5-min Off-Peak,
+          Blackout Hours (7PM-7AM), Burst Mode (60s), Possible Train Folder,
           Train-Only Bounding Boxes, Staggered Camera Starts,
           Historical Trend Fields (day_of_week, hour_of_day, month, week_number),
           Train-Only API Filter (?train_only=true), 45-day screenshot retention,
@@ -641,19 +641,14 @@ class ScreenCaptureDetector:
 
                 if burst_mode and time.time() >= burst_end_time:
                     burst_mode = False
-                    next_interval = 60 if is_within_monitoring_hours() else 300
-                    print(f"🏁 [{self.camera_info['name']}] Burst ended. Returning to {'60s peak' if next_interval == 60 else '5min off-peak'}.")
+                    print(f"🏁 [{self.camera_info['name']}] Burst ended. Returning to normal 20s interval.")
 
-                in_peak = is_within_monitoring_hours()
                 if burst_mode:
                     interval = BURST_CONFIG['burst_interval_seconds']
                     mode_label = '[BURST MODE] '
-                elif in_peak:
+                else:
                     interval = 20
                     mode_label = ''
-                else:
-                    interval = 300
-                    mode_label = '[OFF-PEAK] '
 
                 print(f"🎬 [{self.camera_info['name']}] {mode_label}About to capture frame...")
                 frame = self.capture_frame()
