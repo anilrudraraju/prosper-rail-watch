@@ -460,10 +460,11 @@
                                 label: function(ctx) {
                                     var h = Math.floor(ctx.raw.x);
                                     var mins = Math.round((ctx.raw.x - h) * 60);
-                                    var dur = (ctx.raw.dur / 60).toFixed(1);
+                                    var durSec = ctx.raw.dur;
+                                    var durStr = durSec < 120 ? durSec + ' sec' : (durSec / 60).toFixed(1) + ' min';
                                     var ampm = h < 12 ? 'AM' : 'PM';
                                     var h12 = h % 12 || 12;
-                                    return ' ' + h12 + ':' + (mins < 10 ? '0' : '') + mins + ' ' + ampm + ' — ' + dur + ' min blockage';
+                                    return ' ' + h12 + ':' + (mins < 10 ? '0' : '') + mins + ' ' + ampm + ' — ' + durStr + ' blockage';
                                 }
                             }
                         },
