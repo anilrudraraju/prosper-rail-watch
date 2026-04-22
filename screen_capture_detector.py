@@ -1,6 +1,6 @@
 """
 Prosper Rail Watch - Screen Capture Detection
-VERSION: 4.7 - Extended Peak Hours + Post-Train Capture
+VERSION: 4.8 - Single 7AM-7PM Monitoring Window
 Last Updated: April 22, 2026
 Features: SQLite Database, Screenshot Saving, YOLO AI Detection, Smart Scheduling,
           Blackout Hours, Burst Mode (60s), Possible Train Folder, 5-min Off-Peak,
@@ -333,11 +333,11 @@ CAMERA_URLS = {
 MONITORING_SCHEDULE = {
     'enabled': True,
     'time_windows': [
-        {'start': '07:00', 'end': '18:00'},
+        {'start': '07:00', 'end': '19:00'},
     ],
     'blackout': {
         'enabled': True,
-        'start': '19:30',
+        'start': '19:00',
         'end': '07:00'
     },
     'timezone': 'America/Chicago'
@@ -782,7 +782,7 @@ def stop_monitoring():
 def get_status():
     return jsonify({
         'status': 'running' if system_running else 'stopped',
-        'version': '4.7',
+        'version': '4.8',
         'cameras': [
             {'camera_id': cam_id, 'name': info['name'], 'location': info['location'], 'is_active': system_running}
             for cam_id, info in CAMERA_URLS.items()
@@ -1009,7 +1009,7 @@ def stop_training_capture():
 
 if __name__ == '__main__':
     print("=" * 70)
-    print("PROSPER RAIL WATCH - Screen Capture Detection v4.7")
+    print("PROSPER RAIL WATCH - Screen Capture Detection v4.8")
     print("=" * 70)
     print()
     print("🗄️  Initializing database...")
