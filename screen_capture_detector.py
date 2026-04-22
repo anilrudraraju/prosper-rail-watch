@@ -279,7 +279,10 @@ def save_train_event(camera_id, camera_name, start_time, end_time, max_confidenc
         tz = pytz.timezone(MONITORING_SCHEDULE['timezone'])
         start_local = start_time.astimezone(tz) if start_time.tzinfo else tz.localize(start_time)
         end_aware = end_time.astimezone(tz) if end_time.tzinfo else tz.localize(end_time)
-        duration_seconds = int((end_aware - start_local).total_seconds())
+        # Conservative estimate: gates close ~60s before train arrives, and train
+        # could have left up to one burst interval (60s) after last detection.
+        measured_seconds = int((end_aware - start_local).total_seconds())
+        duration_seconds = measured_seconds + 120
         start_time_str = start_local.strftime('%H:%M')
         peak_hours = any(
             w['start'] <= start_time_str <= w['end']
