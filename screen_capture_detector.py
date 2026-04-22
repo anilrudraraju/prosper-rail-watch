@@ -321,12 +321,12 @@ CAMERA_URLS = {
     1: {
         'name': 'First Street',
         'url': 'https://g1.ipcamlive.com/player/player.php?alias=firstst&autoplay=1',
-        'location': 'TX-121 & First St, Prosper, TX'
+        'location': 'First St, Prosper, TX'
     },
     2: {
         'name': 'Prosper Trail',
         'url': 'https://g1.ipcamlive.com/player/player.php?alias=prospertrl&autoplay=1',
-        'location': 'TX-121 & Prosper Trail, Prosper, TX'
+        'location': 'Prosper Trail, Prosper, TX'
     }
 }
 
