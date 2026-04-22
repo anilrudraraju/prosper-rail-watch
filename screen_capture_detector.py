@@ -394,8 +394,21 @@ class ScreenCaptureDetector:
         self.is_running = False
         self.last_detection_time = 0
         self.cooldown_seconds = 60
+        self.model = self._load_model()
         if SCREENSHOT_CONFIG['enabled']:
             self.setup_screenshot_directories()
+
+    def _load_model(self):
+        try:
+            from ultralytics import YOLO
+            model_path = '/var/www/prosper-rail-watch/first_street_best.pt' if self.camera_id == 1 \
+                         else '/var/www/prosper-rail-watch/prosper_trail_best.pt'
+            model = YOLO(model_path)
+            print(f"✅ [{self.camera_info['name']}] AI model loaded from {model_path}")
+            return model
+        except Exception as e:
+            print(f"⚠️  [{self.camera_info['name']}] Failed to load model: {e}")
+            return None
 
     def setup_screenshot_directories(self):
         base_path = SCREENSHOT_CONFIG['save_path']
@@ -513,11 +526,9 @@ class ScreenCaptureDetector:
     def detect_train_ai(self, frame):
         """AI-based train detection using custom YOLO models per camera"""
         try:
-            from ultralytics import YOLO
-            model_path = '/var/www/prosper-rail-watch/first_street_best.pt' if self.camera_id == 1 \
-                         else '/var/www/prosper-rail-watch/prosper_trail_best.pt'
-            model = YOLO(model_path)
-            results = model(frame, conf=0.3, verbose=False)
+            if self.model is None:
+                raise ImportError("Model not loaded")
+            results = self.model(frame, conf=0.3, verbose=False)
             detections_info = []
             train_detected = False
             print(f"🔍 YOLO Detection Results:")
@@ -554,8 +565,11 @@ class ScreenCaptureDetector:
             print(f"   ❌ AI detection error: {e}")
             return self.detect_train_simple(frame), []
 
-    def monitor(self):
+    def monitor(self, stagger_seconds=0):
         """Main monitoring loop with burst mode"""
+        if stagger_seconds:
+            print(f"⏱️  [{self.camera_info['name']}] Staggering start by {stagger_seconds}s...")
+            time.sleep(stagger_seconds)
         print(f"🚂 Monitoring {self.camera_info['name']}...")
         self.is_running = True
         frame_count = 0
@@ -733,10 +747,8 @@ def start_monitoring():
     for index, (camera_id, camera_info) in enumerate(CAMERA_URLS.items()):
         detector = ScreenCaptureDetector(camera_id, camera_info)
         browsers[camera_id] = detector
-        if index > 0:
-            print(f"⏱️  Staggering {camera_info['name']} start by {index * 30} seconds...")
-            time.sleep(index * 30)
-        thread = threading.Thread(target=detector.monitor, daemon=True)
+        stagger = index * 30
+        thread = threading.Thread(target=detector.monitor, kwargs={'stagger_seconds': stagger}, daemon=True)
         thread.start()
     print("✓ All cameras monitoring started")
 
@@ -756,7 +768,7 @@ def stop_monitoring():
 def get_status():
     return jsonify({
         'status': 'running' if system_running else 'stopped',
-        'version': '4.3',
+        'version': '4.5',
         'cameras': [
             {'camera_id': cam_id, 'name': info['name'], 'location': info['location'], 'is_active': system_running}
             for cam_id, info in CAMERA_URLS.items()

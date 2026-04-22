@@ -232,7 +232,10 @@
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             el.classList.add('active');
             document.getElementById(tabName).classList.add('active');
-            if (tabName === 'trends' && !chartsInitialized) initCharts();
+            if (tabName === 'trends') {
+                chartsInitialized = false;
+                initCharts();
+            }
         }
 
         // ── Notifications ─────────────────────────────────────
@@ -382,6 +385,7 @@
         // ── Historical Data Charts ─────────────────────────────
         let chartsInitialized = false;
         let bubbleChartInstance = null;
+        let barChartInstance = null;
         let eventsByDay = {0:[],1:[],2:[],3:[],4:[],5:[],6:[]};
         const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
         const isWeekend = [true,false,false,false,false,false,true];
@@ -489,6 +493,14 @@
 
         async function initCharts() {
             chartsInitialized = true;
+            if (barChartInstance) { barChartInstance.destroy(); barChartInstance = null; }
+            if (bubbleChartInstance) { bubbleChartInstance.destroy(); bubbleChartInstance = null; }
+            document.getElementById('barLoading').style.display = 'block';
+            document.getElementById('barWrap').style.display = 'none';
+            document.getElementById('barLegend').style.display = 'none';
+            document.getElementById('bubbleLoading').style.display = 'block';
+            document.getElementById('dayBtnsWrap').style.display = 'none';
+            document.getElementById('dayBtns').innerHTML = '';
             try {
                 const [resp, evResp] = await Promise.all([fetch('/api/trends'), fetch('/api/train-events?days=90')]);
                 if (!resp.ok || !evResp.ok) throw new Error('API error');
@@ -513,7 +525,7 @@
                 document.getElementById('bubbleLoading').style.display = 'none';
                 document.getElementById('dayBtnsWrap').style.display = 'block';
 
-                new Chart(document.getElementById('barChart'), {
+                barChartInstance = new Chart(document.getElementById('barChart'), {
                     type: 'bar',
                     data: { labels: dayNames, datasets: [{ data: dayCounts, backgroundColor: dayNames.map((_,i) => isWeekend[i] ? 'rgba(255,193,7,0.3)' : '#FFC107'), borderColor: dayNames.map((_,i) => isWeekend[i] ? 'rgba(255,193,7,0.5)' : '#FFC107'), borderWidth: 1, borderRadius: 4 }] },
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: '#1a1a1a', borderColor: 'rgba(255,193,7,0.4)', borderWidth: 1, titleColor: '#FFC107', bodyColor: '#ccc', callbacks: { label: ctx => ` ${ctx.raw} train events` } } }, scales: { x: { ticks: { color: '#777', font: { size: 12 } }, grid: { color: 'rgba(255,255,255,0.04)' }, border: { color: 'rgba(255,193,7,0.2)' } }, y: { ticks: { color: '#777', font: { size: 11 }, stepSize: 5 }, grid: { color: 'rgba(255,255,255,0.04)' }, border: { color: 'rgba(255,193,7,0.2)' }, beginAtZero: true } } }
