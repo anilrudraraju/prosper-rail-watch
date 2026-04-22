@@ -276,9 +276,10 @@ def save_train_event(camera_id, camera_name, start_time, end_time, max_confidenc
     if not DB_CONFIG['enabled']:
         return
     try:
-        duration_seconds = int((end_time - start_time).total_seconds())
         tz = pytz.timezone(MONITORING_SCHEDULE['timezone'])
-        start_local = start_time.astimezone(tz) if start_time.tzinfo else start_time
+        start_local = start_time.astimezone(tz) if start_time.tzinfo else tz.localize(start_time)
+        end_aware = end_time.astimezone(tz) if end_time.tzinfo else tz.localize(end_time)
+        duration_seconds = int((end_aware - start_local).total_seconds())
         start_time_str = start_local.strftime('%H:%M')
         peak_hours = any(
             w['start'] <= start_time_str <= w['end']
@@ -661,7 +662,8 @@ class ScreenCaptureDetector:
                         current_time = time.time()
                         if not train_event_active:
                             train_event_active = True
-                            train_event_start = datetime.now()
+                            _tz = pytz.timezone(MONITORING_SCHEDULE['timezone'])
+                            train_event_start = datetime.now(_tz)
                             train_event_max_conf = max_train_conf
                             print(f"🕐 [{self.camera_info['name']}] Train event started at {train_event_start.strftime('%H:%M:%S')}")
                         else:

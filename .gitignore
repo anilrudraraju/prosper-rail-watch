@@ -1,0 +1,28 @@
+# Database
+*.db
+*.db.backup*
+
+# YOLO model weights
+*.pt
+
+# Screenshots and training data
+screenshots/
+training_capture/
+
+# Python
+__pycache__/
+*.pyc
+venv/
+
+# Backups and server artifacts
+*.bak.*
+*.backup*
+Backup/
+deployment_history.md
+
+# Chrome installer
+*.deb
+
+# Test files
+test_chrome.py
+test_py
