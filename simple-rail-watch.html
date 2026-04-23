@@ -424,7 +424,8 @@
         function parseExactHour(start, fallbackHour) {
             try {
                 if (start && typeof start === 'string' && start.indexOf(' ') !== -1) {
-                    var parts = start.split(' ')[1].split(':');
+                    var timePart = start.split(' ')[1].replace(/-\d{2}:\d{2}$/, '');
+                    var parts = timePart.split(':');
                     var h = parseInt(parts[0]);
                     var m = parseInt(parts[1]);
                     return h + (m / 60);
