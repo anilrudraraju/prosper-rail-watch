@@ -420,6 +420,32 @@
             }
         };
 
+        var selectedDow = null;
+
+        const nowLinePlugin = {
+            id: 'nowLine',
+            afterDraw(chart) {
+                const todayDow = new Date().getDay();
+                if (selectedDow !== todayDow) return;
+                const now = new Date();
+                const nowX = now.getHours() + now.getMinutes() / 60;
+                if (nowX < 7 || nowX > 20) return;
+                const {ctx: c, chartArea: {top, bottom}, scales: {x}} = chart;
+                const px = x.getPixelForValue(nowX);
+                c.save();
+                c.strokeStyle = '#E8593C';
+                c.lineWidth = 1.5;
+                c.setLineDash([4, 3]);
+                c.beginPath(); c.moveTo(px, top); c.lineTo(px, bottom); c.stroke();
+                c.setLineDash([]);
+                c.fillStyle = '#E8593C';
+                c.font = 'bold 10px sans-serif';
+                c.textAlign = 'center';
+                c.fillText('NOW', px, top - 6);
+                c.restore();
+            }
+        };
+
         // Parse start_time string "2026-04-08 14:30:32.123" into decimal hour e.g. 14.508
         function parseExactHour(start, fallbackHour) {
             try {
@@ -435,6 +461,7 @@
         }
 
         function renderBubble(dowIndex) {
+            selectedDow = dowIndex;
             var events = eventsByDay[dowIndex];
             var wrap = document.getElementById('bubbleWrap');
                         var noDataMsg = document.getElementById('noDataMsg');
@@ -483,7 +510,8 @@
                                 }
                             }
                         },
-                        schoolZones: schoolZonesPlugin
+                        schoolZones: schoolZonesPlugin,
+                        nowLine: nowLinePlugin
                     },
                     scales: {
                         x: {
@@ -503,7 +531,7 @@
                     },
                     layout: { padding: { top: 24, bottom: 20, left: 10, right: 10 } }
                 },
-                plugins: [schoolZonesPlugin]
+                plugins: [schoolZonesPlugin, nowLinePlugin]
             });
         }
 
@@ -562,6 +590,9 @@
                     btnContainer.appendChild(btn);
                 });
                 renderBubble(todayDow);
+                setInterval(function() {
+                    if (bubbleChartInstance) bubbleChartInstance.update('none');
+                }, 60000);
 
             } catch(err) {
                 document.getElementById('barLoading').style.display = 'none';
