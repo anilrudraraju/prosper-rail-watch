@@ -1,13 +1,12 @@
 """
 Prosper Rail Watch - Screen Capture Detection
-VERSION: 4.13 - Fix Bubble Chart Timestamp Parsing
+VERSION: 4.14 - Remove Training Capture Mode
 Last Updated: April 22, 2026
 Features: SQLite Database, Screenshot Saving, YOLO AI Detection, Smart Scheduling,
           Blackout Hours (7PM-7AM), Burst Mode (60s), Possible Train Folder,
           Train-Only Bounding Boxes, Staggered Camera Starts,
           Historical Trend Fields (day_of_week, hour_of_day, month, week_number),
-          Train-Only API Filter (?train_only=true), 45-day screenshot retention,
-          Training Capture Mode (POST /api/training_capture)
+          Train-Only API Filter (?train_only=true), 45-day screenshot retention
 """
 
 from selenium import webdriver
@@ -372,20 +371,6 @@ system_running = False
 browsers = {}
 chrome_lock = threading.Lock()
 
-# ── Training capture mode ──────────────────────────────────────────────────────
-TRAINING_CAPTURE_DIR = "/var/www/prosper-rail-watch/training_capture"
-
-training_mode = {
-    'active':      False,
-    'end_time':    None,
-    'image_count': 0,
-    'session_dir': None,
-    'camera_id':   1,     # Default: First Street
-    'interval':    5,     # Seconds between training captures
-}
-training_lock = threading.Lock()
-
-
 # ── Detector class ─────────────────────────────────────────────────────────────
 
 class ScreenCaptureDetector:
@@ -586,51 +571,6 @@ class ScreenCaptureDetector:
 
         while self.is_running:
             try:
-                # ── Training capture mode check ────────────────────────────
-                with training_lock:
-                    t_active    = training_mode['active']
-                    t_camera_id = training_mode['camera_id']
-                    t_end_time  = training_mode['end_time']
-                    t_dir       = training_mode['session_dir']
-
-                if t_active:
-                    # Auto-expire when duration is up
-                    if time.time() >= t_end_time:
-                        with training_lock:
-                            training_mode['active'] = False
-                        print(f"🏁 [TRAINING] Session complete — {training_mode['image_count']} images saved to {t_dir}")
-                        print(f"✅ [TRAINING] Returning to normal monitoring")
-                        continue
-
-                    # Only the target camera captures during training mode
-                    # Prosper Trail sleeps 20s between checks so it's not
-                    # spinning, but picks up quickly when training ends
-                    if self.camera_id != t_camera_id:
-                        time.sleep(20)
-                        continue
-
-                    # Capture frame using existing mechanism (chrome_lock respected)
-                    print(f"📸 [TRAINING] Capturing image for training...")
-                    frame = self.capture_frame()
-                    if frame is not None:
-                        os.makedirs(t_dir, exist_ok=True)
-                        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                        with training_lock:
-                            training_mode['image_count'] += 1
-                            count = training_mode['image_count']
-                        filename = f"first_street_train_{timestamp}_{count:04d}.jpg"
-                        filepath = os.path.join(t_dir, filename)
-                        cv2.imwrite(filepath, cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
-                        print(f"💾 [TRAINING] [{count}] Saved: {filename}")
-                    else:
-                        print(f"⚠️  [TRAINING] Frame capture failed — retrying in 20s")
-
-                    # 20s recovery buffer — same as normal peak monitoring
-                    # keeps CPU from spiking and allows recovery if capture runs long
-                    time.sleep(20)
-                    continue
-                # ── End training mode check ────────────────────────────────
-
                 if is_blackout_hours() and not burst_mode:
                     wait_seconds = seconds_until_blackout_ends()
                     print(f"🌙 [{self.camera_info['name']}] Blackout hours. Sleeping {round(wait_seconds/3600,1)}hrs until 7:00 AM...")
@@ -777,7 +717,7 @@ def stop_monitoring():
 def get_status():
     return jsonify({
         'status': 'running' if system_running else 'stopped',
-        'version': '4.13',
+        'version': '4.14',
         'cameras': [
             {'camera_id': cam_id, 'name': info['name'], 'location': info['location'], 'is_active': system_running}
             for cam_id, info in CAMERA_URLS.items()
@@ -927,84 +867,11 @@ def export_detections():
                     headers={'Content-Disposition': 'attachment; filename=detections.csv'})
 
 
-@app.route('/api/training_capture', methods=['POST'])
-def start_training_capture():
-    """
-    Trigger training image capture mode on a camera.
-    Pauses normal monitoring on that camera, captures images fast, auto-reverts after duration.
-
-    Usage:
-      curl -X POST "http://localhost:5000/api/training_capture"
-      curl -X POST "http://localhost:5000/api/training_capture?duration=300&camera=1&interval=5"
-
-    Params:
-      duration  — seconds to run (default: 900 = 15 min, ~17 images)
-      camera    — camera_id (default: 1 = First Street)
-    """
-    duration  = int(request.args.get('duration', 900))
-    camera_id = int(request.args.get('camera', 1))
-
-    camera_name = CAMERA_URLS.get(camera_id, {}).get('name', f'Camera {camera_id}')
-    session_id  = datetime.now().strftime("%Y%m%d_%H%M%S")
-    session_dir = os.path.join(TRAINING_CAPTURE_DIR, session_id)
-    os.makedirs(session_dir, exist_ok=True)
-
-    with training_lock:
-        training_mode['active']      = True
-        training_mode['end_time']    = time.time() + duration
-        training_mode['image_count'] = 0
-        training_mode['session_dir'] = session_dir
-        training_mode['camera_id']   = camera_id
-
-    print(f"🎯 [TRAINING] Started — camera={camera_name}, duration={duration}s (~{duration//53} images expected)")
-    print(f"📁 [TRAINING] Saving to: {session_dir}")
-
-    return jsonify({
-        'success':        True,
-        'status':         'training_active',
-        'camera':         camera_name,
-        'duration_s':     duration,
-        'duration_min':   duration // 60,
-        'images_expected': duration // 53,
-        'session_dir':    session_dir,
-        'tip':            f'scp -r root@157.245.216.46:{session_dir} ~/Desktop/first_street_training/'
-    })
-
-
-@app.route('/api/training_capture', methods=['GET'])
-def training_capture_status():
-    """Check training mode status — curl http://localhost:5000/api/training_capture"""
-    with training_lock:
-        if not training_mode['active']:
-            return jsonify({'active': False, 'message': 'No training session running'})
-        remaining = max(0, int(training_mode['end_time'] - time.time()))
-        return jsonify({
-            'active':       True,
-            'remaining_s':  remaining,
-            'image_count':  training_mode['image_count'],
-            'session_dir':  training_mode['session_dir'],
-            'camera_id':    training_mode['camera_id'],
-        })
-
-
-@app.route('/api/training_capture/stop', methods=['POST'])
-def stop_training_capture():
-    """Stop training mode early — curl -X POST http://localhost:5000/api/training_capture/stop"""
-    with training_lock:
-        if not training_mode['active']:
-            return jsonify({'success': False, 'message': 'No training session running'})
-        training_mode['active'] = False
-        count = training_mode['image_count']
-        session_dir = training_mode['session_dir']
-    print(f"⏹️  [TRAINING] Stopped early — {count} images saved")
-    return jsonify({'success': True, 'images_saved': count, 'session_dir': session_dir})
-
-
 # ── Main ───────────────────────────────────────────────────────────────────────
 
 if __name__ == '__main__':
     print("=" * 70)
-    print("PROSPER RAIL WATCH - Screen Capture Detection v4.13")
+    print("PROSPER RAIL WATCH - Screen Capture Detection v4.14")
     print("=" * 70)
     print()
     print("🗄️  Initializing database...")
@@ -1022,9 +889,6 @@ if __name__ == '__main__':
     print("   - GET  /api/detections/export")
     print("   - POST /api/start")
     print("   - POST /api/stop")
-    print("   - POST /api/training_capture        (start training capture)")
-    print("   - GET  /api/training_capture        (check training status)")
-    print("   - POST /api/training_capture/stop   (stop training early)")
     print()
     print("💡 Start monitoring: curl http://localhost:5000/api/start")
     print()
