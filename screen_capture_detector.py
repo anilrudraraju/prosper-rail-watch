@@ -1,6 +1,6 @@
 """
 Prosper Rail Watch - Screen Capture Detection
-VERSION: 4.11 - Fix Bubble Scaling and Legend Match
+VERSION: 4.12 - Fix Bubble Scaling and Legend Match
 Last Updated: April 22, 2026
 Features: SQLite Database, Screenshot Saving, YOLO AI Detection, Smart Scheduling,
           Blackout Hours (7PM-7AM), Burst Mode (60s), Possible Train Folder,
@@ -777,7 +777,7 @@ def stop_monitoring():
 def get_status():
     return jsonify({
         'status': 'running' if system_running else 'stopped',
-        'version': '4.11',
+        'version': '4.12',
         'cameras': [
             {'camera_id': cam_id, 'name': info['name'], 'location': info['location'], 'is_active': system_running}
             for cam_id, info in CAMERA_URLS.items()
@@ -1004,7 +1004,7 @@ def stop_training_capture():
 
 if __name__ == '__main__':
     print("=" * 70)
-    print("PROSPER RAIL WATCH - Screen Capture Detection v4.11")
+    print("PROSPER RAIL WATCH - Screen Capture Detection v4.12")
     print("=" * 70)
     print()
     print("🗄️  Initializing database...")

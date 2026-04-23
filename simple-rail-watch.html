@@ -75,7 +75,7 @@
         .day-btn.active { background: rgba(255,193,7,0.15); border-color: #FFC107; color: #FFC107; }
         .day-btn:hover:not(.active) { background: rgba(255,193,7,0.07); color: #aaa; }
         .chart-container { position: relative; width: 100%; height: 260px; }
-        .bubble-container { position: relative; width: 100%; height: 400px; }
+        .bubble-container { position: relative; width: 100%; height: 280px; }
         .loading-msg { text-align: center; padding: 3rem 0; color: #555; font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase; }
         .no-data-msg { text-align: center; padding: 3rem 0; color: #444; font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase; }
         .error-msg { text-align: center; padding: 2rem; color: #dc3545; font-size: 0.8rem; letter-spacing: 1px; background: rgba(220,53,69,0.05); border: 1px solid rgba(220,53,69,0.2); border-radius: 8px; }
@@ -170,17 +170,17 @@
                         <div class="day-select" id="dayBtns"></div>
                         <div class="bubble-container" id="bubbleWrap"><canvas id="bubbleChart"></canvas></div>
                         <div id="noDataMsg" class="no-data-msg" style="display:none;">No train events recorded for this day yet.</div>
-                        <div class="chart-legend">
+                        <div class="chart-legend" style="align-items:center;">
                             <div class="legend-item">
-                                <svg width="38" height="38" style="display:inline-block;vertical-align:middle;"><circle cx="19" cy="19" r="17" fill="none" stroke="#FFC107" stroke-width="1.5"/></svg>
+                                <svg width="20" height="20" style="display:inline-block;vertical-align:middle;"><circle cx="10" cy="10" r="8" fill="none" stroke="#FFC107" stroke-width="1.5"/></svg>
                                 ~3 min
                             </div>
                             <div class="legend-item">
-                                <svg width="66" height="66" style="display:inline-block;vertical-align:middle;"><circle cx="33" cy="33" r="31" fill="none" stroke="#FFC107" stroke-width="1.5"/></svg>
+                                <svg width="34" height="34" style="display:inline-block;vertical-align:middle;"><circle cx="17" cy="17" r="15" fill="none" stroke="#FFC107" stroke-width="1.5"/></svg>
                                 ~10 min
                             </div>
                             <div class="legend-item">
-                                <svg width="112" height="112" style="display:inline-block;vertical-align:middle;"><circle cx="56" cy="56" r="54" fill="rgba(255,193,7,0.25)" stroke="#FFC107" stroke-width="1.5"/></svg>
+                                <svg width="54" height="54" style="display:inline-block;vertical-align:middle;"><circle cx="27" cy="27" r="25" fill="rgba(255,193,7,0.25)" stroke="#FFC107" stroke-width="1.5"/></svg>
                                 30+ min
                             </div>
                             <div class="legend-item" style="margin-left:8px;"><span style="display:inline-block;width:20px;height:10px;background:rgba(255,193,7,0.08);border:1px solid rgba(255,193,7,0.2);border-radius:2px;"></span>School hours</div>
@@ -457,7 +457,7 @@
                 // Only stack vertically if two events are at the exact same minute
                 var offset = (minuteIdx[key] - (total - 1) / 2) * 0.13;
                 minuteIdx[key]++;
-                return { x: exactX, y: 0.5 + offset, r: Math.max(8, Math.sqrt(e.dur / 90) * 12), dur: e.dur };
+                return { x: exactX, y: 0.5 + offset, r: Math.max(6, Math.sqrt(e.dur / 180) * 8), dur: e.dur };
             });
 
             bubbleChartInstance = new Chart(document.getElementById('bubbleChart'), {
