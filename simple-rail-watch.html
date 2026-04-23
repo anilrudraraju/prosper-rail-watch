@@ -172,10 +172,18 @@
                         <div id="noDataMsg" class="no-data-msg" style="display:none;">No train events recorded for this day yet.</div>
                         <div class="chart-legend">
                             <div class="legend-item">
-                                <svg width="20" height="14" style="display:inline-block;vertical-align:middle;"><circle cx="7" cy="7" r="5" fill="none" stroke="#FFC107" stroke-width="1.5"/><circle cx="7" cy="7" r="2" fill="#FFC107"/></svg>
-                                Larger circle = longer blockage
+                                <svg width="12" height="12" style="display:inline-block;vertical-align:middle;"><circle cx="6" cy="6" r="5" fill="none" stroke="#FFC107" stroke-width="1.5"/></svg>
+                                ~3 min
                             </div>
-                            <div class="legend-item"><span style="display:inline-block;width:20px;height:10px;background:rgba(255,193,7,0.08);border:1px solid rgba(255,193,7,0.2);border-radius:2px;"></span>School hours</div>
+                            <div class="legend-item">
+                                <svg width="22" height="22" style="display:inline-block;vertical-align:middle;"><circle cx="11" cy="11" r="9" fill="none" stroke="#FFC107" stroke-width="1.5"/></svg>
+                                ~10 min
+                            </div>
+                            <div class="legend-item">
+                                <svg width="44" height="44" style="display:inline-block;vertical-align:middle;"><circle cx="22" cy="22" r="19" fill="rgba(255,193,7,0.25)" stroke="#FFC107" stroke-width="1.5"/></svg>
+                                30+ min
+                            </div>
+                            <div class="legend-item" style="margin-left:8px;"><span style="display:inline-block;width:20px;height:10px;background:rgba(255,193,7,0.08);border:1px solid rgba(255,193,7,0.2);border-radius:2px;"></span>School hours</div>
                         </div>
                     </div>
                 </div>
@@ -449,7 +457,7 @@
                 // Only stack vertically if two events are at the exact same minute
                 var offset = (minuteIdx[key] - (total - 1) / 2) * 0.13;
                 minuteIdx[key]++;
-                return { x: exactX, y: 0.5 + offset, r: Math.max(8, Math.min(28, Math.sqrt(e.dur) * 0.65)), dur: e.dur };
+                return { x: exactX, y: 0.5 + offset, r: Math.max(8, Math.sqrt(e.dur / 180) * 12), dur: e.dur };
             });
 
             bubbleChartInstance = new Chart(document.getElementById('bubbleChart'), {
