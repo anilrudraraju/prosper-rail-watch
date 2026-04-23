@@ -433,12 +433,12 @@
                 const {ctx: c, chartArea: {top, bottom}, scales: {x}} = chart;
                 const px = x.getPixelForValue(nowX);
                 c.save();
-                c.strokeStyle = '#E8593C';
+                c.strokeStyle = '#FFC107';
                 c.lineWidth = 1.5;
                 c.setLineDash([4, 3]);
                 c.beginPath(); c.moveTo(px, top); c.lineTo(px, bottom); c.stroke();
                 c.setLineDash([]);
-                c.fillStyle = '#E8593C';
+                c.fillStyle = '#FFC107';
                 c.font = 'bold 10px sans-serif';
                 c.textAlign = 'center';
                 c.fillText('NOW', px, top - 6);
